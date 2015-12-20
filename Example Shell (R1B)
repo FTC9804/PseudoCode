@@ -1,7 +1,7 @@
 //BOMB_SQUAD_ROBOTICS
 
 
-//THIS DOES NOT HAVE ENCODERS
+//THIS HAS TEST ENCODER CODE
 
 package com.qualcomm.ftcrobotcontroller.opmodes.BombSquadOpModes;
 
@@ -13,6 +13,17 @@ public class First extends LinearOpMode {
 
     DcMotor right;
     DcMotor left;
+    
+     //encoder stuff (example values from tutorial)
+    final static int ENCODER_CPR = 1440;
+    final static double GEAR_RATIO = 2;
+    final static int WHEEL_DIAMETER = 4;
+    final static int DISTANCE = 25;
+
+    final static double CIRCUMFRENCE = Math.PI * WHEEL_DIAMETER;
+    final static double ROTATIONS = DISTANCE / CIRCUMFRENCE;
+    final static double COUNTS = ENCODER_CPR * ROTATIONS * GEAR_RATIO;
+    
     double speed = 1;
 
     //distances
@@ -38,6 +49,16 @@ public class First extends LinearOpMode {
         right = hardwareMap.dcMotor.get("m1");
         left = hardwareMap.dcMotor.get("m2");
         right.setDirection(DcMotor.Direction.REVERSE);
+        
+        //encoders
+        left.setChannelMode(DcMotorController.RunMode.RESET_ENCODERS);
+        right.setChannelMode(DcMotorController.RunMode.RESET_ENCODERS);
+
+        left.setTargetPosition((int) COUNTS);
+        right.setTargetPosition((int) COUNTS);
+
+        left.setChannelMode(DcMotorController.RunMode.RUN_TO_POSITION);
+        right.setChannelMode(DcMotorController.RunMode.RUN_TO_POSITION);
         
         //gyro setup & calibration
         GyroSensor sensorGyro;
