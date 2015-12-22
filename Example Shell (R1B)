@@ -54,17 +54,24 @@ public class First extends LinearOpMode {
 
     @Override
     public void runOpMode() throws InterruptedException {
+    	//associating hardware map with variables in program
         right = hardwareMap.dcMotor.get("m1");
         left = hardwareMap.dcMotor.get("m2");
+        //right motor reversed b/c pointed in opposite direction
         right.setDirection(DcMotor.Direction.REVERSE);
         
-        //encoders
+        //encoder counters are reset
         left.setChannelMode(DcMotorController.RunMode.RESET_ENCODERS);
         right.setChannelMode(DcMotorController.RunMode.RESET_ENCODERS);
-
+		
+		//encoder count for desired distance
         left.setTargetPosition((int) COUNTS);
         right.setTargetPosition((int) COUNTS);
 
+		//mode in which controller should operate the motor
+		/* the robot will travel at the set speed to the given position
+		once it reaches the set encoder count, it will stop motors
+		and hold given position.*/
         left.setChannelMode(DcMotorController.RunMode.RUN_TO_POSITION);
         right.setChannelMode(DcMotorController.RunMode.RUN_TO_POSITION);
         
