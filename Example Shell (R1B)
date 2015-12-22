@@ -75,8 +75,11 @@ public class First extends LinearOpMode {
 		left.setChannelMode(DcMotorController.RunMode.RUN_TO_POSITION);
         right.setChannelMode(DcMotorController.RunMode.RUN_TO_POSITION);
         
-		//this statement will continally run
-		while(true)
+        //this allows a simple timer to run for a short amount of time before continuing
+        int timercount = 0;
+        
+		//this statement will continually run
+		while(timercount <= 250)
          {
 			if (COUNTS <= left.getCurrentPosition()) {
 				left.SetValue(0);
@@ -85,6 +88,7 @@ public class First extends LinearOpMode {
 			if (COUNTS <= right.getCurrentPosition()) {
 				right.SetValue(0);
 			}
+			timercount++;
     	}
 
         //gyro setup & calibration
