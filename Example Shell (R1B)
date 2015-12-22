@@ -82,11 +82,11 @@ public class First extends LinearOpMode {
 		while(timercount <= 250)
          {
 			if (COUNTS <= left.getCurrentPosition()) {
-				left.SetValue(0);
+				left.SetPower(0);
 				//all other motors set to 0
 			}
 			if (COUNTS <= right.getCurrentPosition()) {
-				right.SetValue(0);
+				right.SetPower(0);
 			}
 			timercount++;
 			
