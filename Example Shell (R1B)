@@ -14,14 +14,22 @@ public class First extends LinearOpMode {
     DcMotor right;
     DcMotor left;
     
-     //encoder stuff (example values from tutorial)
+     //tetrix motor controllers put out 1440 pulses per rotation
     final static int ENCODER_CPR = 1440;
+    //input gear turns twice for every output gear
+    //need this to find motor turn from the given wheel turn
     final static double GEAR_RATIO = 2;
+    //this won't actually be the real diameter because we are doing treads. 
+    //we can try using the diameter from the pulley used to calculate the distance
     final static int WHEEL_DIAMETER = 4;
+    //distance in inches
     final static int DISTANCE = 25;
 
+	//uses easy formula of pi*d=C
     final static double CIRCUMFRENCE = Math.PI * WHEEL_DIAMETER;
+    find rotations of the MOTOR not WHEEL
     final static double ROTATIONS = DISTANCE / CIRCUMFRENCE;
+    // motor rotations * counts per revolution * gear ratio
     final static double COUNTS = ENCODER_CPR * ROTATIONS * GEAR_RATIO;
     
     double speed = 1;
