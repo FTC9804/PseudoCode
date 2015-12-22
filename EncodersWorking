@@ -1,0 +1,85 @@
+package com.qualcomm.ftcrobotcontroller.opmodes;
+
+import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorController;
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+
+/**
+ * Created by etiennelunetta on 12/21/15.
+ */
+public class encoders extends LinearOpMode{
+    DcMotor left;
+    DcMotor right;
+
+    //encoder stuff (example values from tutorial)
+    final static int ENCODER_CPR = 1440;
+    final static double GEAR_RATIO = 2;
+    final static int WHEEL_DIAMETER = 4;
+    final static int DISTANCE = 50;
+
+    final static double CIRCUMFRENCE = Math.PI * WHEEL_DIAMETER;
+    final static double ROTATIONS = DISTANCE / CIRCUMFRENCE;
+    final static double COUNTS = ENCODER_CPR * ROTATIONS * GEAR_RATIO;
+
+    @Override
+    public void runOpMode() throws InterruptedException {
+
+        left = hardwareMap.dcMotor.get("m1");
+        right = hardwareMap.dcMotor.get("m2");
+
+        //left.setChannelMode(DcMotorController.RunMode.RESET_ENCODERS);
+        //right.setChannelMode(DcMotorController.RunMode.RESET_ENCODERS);
+
+       /* while(left.getTargetPosition() > COUNTS){
+            left.setPower(1);
+            right.setPower(1);
+            left.setTargetPosition((int)COUNTS);
+            right.setTargetPosition((int)COUNTS);
+        }
+
+        while (left.getCurrentPosition() <= COUNTS){
+
+            left.setPower(0);
+            right.setPower(0);
+
+
+        } */
+
+        //encoder counters are reset
+        left.setChannelMode(DcMotorController.RunMode.RESET_ENCODERS);
+        right.setChannelMode(DcMotorController.RunMode.RESET_ENCODERS);
+
+        //encoder count for desired distance
+        left.setTargetPosition((int) COUNTS);
+        right.setTargetPosition((int) COUNTS);
+
+        //mode in which controller should operate the motor
+		/* the robot will travel at the set speed to the given position
+		once it reaches the set encoder count, it will stop motors
+		and hold given position.*/
+
+
+
+
+        while (true) {
+            if (COUNTS >= left.getCurrentPosition()) {
+                left.setPower(1);
+                right.setPower(1);
+                left.setChannelMode(DcMotorController.RunMode.RUN_TO_POSITION);
+                right.setChannelMode(DcMotorController.RunMode.RUN_TO_POSITION);
+                //all other motors set to 0
+            }
+            if (COUNTS <= left.getCurrentPosition()) {
+                right.setPower(0);
+                left.setPower(0);
+            }
+                telemetry.addData("MotorTarget", COUNTS);
+                telemetry.addData("LeftPosition", left.getCurrentPosition());
+                telemetry.addData("RightPosition", right.getCurrentPosition());
+
+        }
+
+    }
+
+}
