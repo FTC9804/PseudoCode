@@ -61,23 +61,36 @@ public class encoders extends LinearOpMode{
 
 
 
+        this.resetStartTime();
+        while (getRuntime() < 10) {
 
-        while (true) {
-            if (COUNTS >= left.getCurrentPosition()) {
-                left.setPower(1);
-                right.setPower(1);
-                left.setChannelMode(DcMotorController.RunMode.RUN_TO_POSITION);
-                right.setChannelMode(DcMotorController.RunMode.RUN_TO_POSITION);
-                //all other motors set to 0
-            }
-            if (COUNTS <= left.getCurrentPosition()) {
-                right.setPower(0);
-                left.setPower(0);
-            }
+
+                stopWithDistance();
+
                 telemetry.addData("MotorTarget", COUNTS);
                 telemetry.addData("LeftPosition", left.getCurrentPosition());
                 telemetry.addData("RightPosition", right.getCurrentPosition());
 
+        }
+
+        telemetry.addData("MotorTarget", 0);
+        telemetry.addData("LeftPosition", 0);
+        telemetry.addData("RightPosition", 0);
+
+    }
+
+    public void stopWithDistance(){
+
+        if (COUNTS >= left.getCurrentPosition()) {
+            left.setPower(1);
+            right.setPower(1);
+            left.setChannelMode(DcMotorController.RunMode.RUN_TO_POSITION);
+            right.setChannelMode(DcMotorController.RunMode.RUN_TO_POSITION);
+            //all other motors set to 0
+        }
+        if (COUNTS <= left.getCurrentPosition()) {
+            right.setPower(0);
+            left.setPower(0);
         }
 
     }
