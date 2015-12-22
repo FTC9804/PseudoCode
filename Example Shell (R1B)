@@ -72,9 +72,21 @@ public class First extends LinearOpMode {
 		/* the robot will travel at the set speed to the given position
 		once it reaches the set encoder count, it will stop motors
 		and hold given position.*/
-        left.setChannelMode(DcMotorController.RunMode.RUN_TO_POSITION);
+		left.setChannelMode(DcMotorController.RunMode.RUN_TO_POSITION);
         right.setChannelMode(DcMotorController.RunMode.RUN_TO_POSITION);
         
+		//this statement will continally run
+		while(true)
+         {
+			if (COUNTS <= left.getCurrentPosition()) {
+				left.SetValue(0);
+				//all other motors set to 0
+			}
+			if (COUNTS <= right.getCurrentPosition()) {
+				right.SetValue(0);
+			}
+    	}
+
         //gyro setup & calibration
         GyroSensor sensorGyro;
         sensorGyro = hardwareMap.gyroSensor.get("gyro");
