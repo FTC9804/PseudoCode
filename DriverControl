@@ -1,0 +1,388 @@
+package com.qualcomm.ftcrobotcontroller.opmodes;
+
+import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.util.Range;
+
+/**
+ * Created by etiennelunetta on 12/22/15.
+ */
+public class DriverControl extends OpMode {
+
+    //Object declarations
+
+    Servo RightFlicker;
+    Servo LeftFlicker;
+    Servo BlockDropper;
+    Servo FlickString;
+    Servo ClimberFlicker;
+    Servo ChurroGrabberRight;
+    Servo ChurroGrabberLeft;
+    DcMotor DriveRight1;
+    DcMotor DriveRight2; //Moves at 95% speed of DriveRight1
+    DcMotor DriveLeft1;
+    DcMotor DriveLeft2;  //Moves at 95% speed of DriveLeft1
+    DcMotor RightArm;
+    DcMotor LeftArm;
+    DcMotor Sweeper;
+    DcMotor Winch;
+
+    double RightTreadMotor1Power = 1;
+    double RightTreadMotor2Power = 1;
+    double LeftTreadMotor1Power = 1;
+    double LeftTreadMotor2Power = 1;
+    double TreadGain = 1;
+
+    final static double SECOND_MOTOR_DIFFERENTIAL_PERCENT = 1;
+
+    double ArmPower;
+    double ArmGain = 1;
+    double SweepPower = 1;
+    double SweepGain = 1;
+    double WinchPower;
+    double WinchGain;
+    double Precision = 0.5;
+
+    //variables for positioning the flippers. Need to be changed!!
+
+    double rightFlickerPosition = 0.5;
+    double leftFlickerPosition = 0.5;
+
+    //Variables for positioning the Block Dropper Servo
+
+    double blockDropperPositionDown = 0.01;
+    double blockDropperPositionUp = 0.99;
+    
+    double climberPositionUp = 0.99;
+    double climberPositionDown = 0.01;
+    
+    double stringFlickerUp = 0.99;
+    double stringFlickerDown = 0.01;
+
+    //variables for positioning the churro grabbers. Need to be changed!!
+
+    double churroGrabbersUp = 0.99;
+    double churroGrabbersDown = 0.01;
+    int i = 1;
+
+    //Not actually gain, just the angle changed every time corresponding button is clicked
+
+    double flickerGain = 0.07;
+
+    final static double NO_MOTION_OR_CENTER_SERVO = 0.5;
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+/** I DON'T KNOW IF THESE SERVO CLIPS WORK, THESE NEED TO BE CHECKED!!**/
+/** THIS IS ALSO ASSUMING THAT ALL SERVOS ARE STANDARD, NEEDS TO BE UPDATED FOR CR VS STANDARD**/
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
+    final static double RIGHT_FLICKER_MAX_RANGE = 0.99;
+    final static double RIGHT_FLICKER_MIN_RANGE = 0.01;
+    final static double LEFT_FLICKER_MAX_RANGE = 0.99;       //Opposite because they are on opposite sides
+    final static double LEFT_FLICKER_MIN_RANGE = 0.01;       //Opposite because they are on opposite sides
+    final static double BLOCK_DROPPER_MAX_RANGE = 0.99;
+    final static double BLOCK_DROPPER_MIN_RANGE = 0.01;
+    //final static double FLICK_STRING_MAX_RANGE = 0.99;
+    //final static double FLICK_STRING_MIN_RANGE = 0.01;
+    //final static double CLIMBER_FLICKER_MAX_RANGE = 0.99;
+    //final static double CLIMBER_FLICKER_MIN_RANGE = 0.01;
+
+    //OR WE CAN USE GENERIC SERVO MAX AND MIN VALUES IF WANTED//
+
+    //final static double SERVO_MAX_RANGE = 0.99;
+    //final static double SERVO_MIN_RANGE = 0.99;
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
+    public void init(){
+
+        //Name the devices
+
+        RightFlicker = hardwareMap.servo.get("s1");         //flippers are not CR servos
+        LeftFlicker = hardwareMap.servo.get("s2");
+
+        BlockDropper = hardwareMap.servo.get("s3");
+
+        FlickString = hardwareMap.servo.get("s4");
+
+        ClimberFlicker = hardwareMap.servo.get("s5");
+
+        ChurroGrabberRight = hardwareMap.servo.get("s6");
+        ChurroGrabberLeft = hardwareMap.servo.get("s7");
+
+        DriveRight1 = hardwareMap.dcMotor.get("m1");
+        DriveRight2 = hardwareMap.dcMotor.get("m2");
+
+        DriveLeft1 = hardwareMap.dcMotor.get("m3");
+        DriveLeft2 = hardwareMap.dcMotor.get("m4");
+
+        RightArm = hardwareMap.dcMotor.get("m5");
+        LeftArm = hardwareMap.dcMotor.get("m6");
+
+        Sweeper = hardwareMap.dcMotor.get("m7");
+
+        Winch = hardwareMap.dcMotor.get("m8");
+
+        /** setting up init() positions for servos**/
+
+        RightFlicker.setPosition(NO_MOTION_OR_CENTER_SERVO);    //this sets motion not position
+        LeftFlicker.setPosition(NO_MOTION_OR_CENTER_SERVO);
+
+        ChurroGrabberRight.setPosition(churroGrabbersUp);
+        ChurroGrabberLeft.setPosition(churroGrabbersUp);
+
+        BlockDropper.setPosition(blockDropperPositionDown);
+
+        FlickString.setPosition(blockDropperPositionDown);       //this is equal to 0.01 name needs to be changed
+
+        ClimberFlicker.setPosition(NO_MOTION_OR_CENTER_SERVO);
+
+        DriveLeft1.setDirection(DcMotor.Direction.REVERSE);      // reverses left motor for uniform drive commands
+        DriveLeft2.setDirection(DcMotor.Direction.REVERSE);
+
+    }
+
+    public void loop(){
+
+/** SETTING UP ALL GAINS | WHEN X IS PRESSED-LOW GAIN | WHEN Y IS PRESSED NORMAL GAIN **/
+
+        //GAMEPAD1 ONLY EDITS TREAD GAIN AND SWEEPER GAIN
+        if (gamepad1.x) {
+
+            TreadGain = Precision;
+            SweepGain = Precision;
+
+        } else if (gamepad1.y) {
+
+            TreadGain = 1;
+            SweepGain = 1;
+
+        } //I DON'T KNOW WHETHER OR NOT I NEED AN ELSE STATEMENT TO CATCH MORE POSSIBILITIES
+
+        //GAMEPAD 2 EDITS ARM, WINCH, AND _______ GAIN
+        if (gamepad2.x) {
+
+            ArmGain = Precision;
+            WinchGain = Precision;
+
+        } else if (gamepad2.y) {
+
+            ArmGain = 1;
+            WinchGain = 1;
+
+        } //I DON'T KNOW WHETHER OR NOT I NEED AN ELSE STATEMENT TO CATCH MORE POSSIBILITIES
+
+
+        /** DRIVING CONTROL USING GAMEPAD1 WITH Y VALUE OF JOYSTICKS **/
+
+        //Driving Functionality using Gamepad1 (driver)
+        //avoid dead zone of +/- 10 percent of joystick range
+
+        if (Math.abs(gamepad1.right_stick_y) > 0.1){
+
+            RightTreadMotor1Power = gamepad1.right_stick_y * TreadGain;
+            RightTreadMotor2Power = gamepad1.right_stick_y * TreadGain * SECOND_MOTOR_DIFFERENTIAL_PERCENT;
+
+        } else {
+
+            RightTreadMotor1Power = 0;
+            RightTreadMotor2Power = 0;
+        }
+
+        if (Math.abs(gamepad1.left_stick_y) > 0.1){
+
+            LeftTreadMotor1Power = gamepad1.right_stick_y * TreadGain;
+            LeftTreadMotor2Power = gamepad1.right_stick_y * TreadGain * SECOND_MOTOR_DIFFERENTIAL_PERCENT;
+
+        } else {
+
+            LeftTreadMotor1Power = 0;
+            LeftTreadMotor2Power = 0;
+        }
+
+        DriveRight1.setPower(RightTreadMotor1Power);
+        DriveRight2.setPower(RightTreadMotor2Power);
+        DriveLeft1.setPower(LeftTreadMotor1Power);
+        DriveLeft2.setPower(LeftTreadMotor2Power);
+
+
+        /** DPAD GAMEPAD2 GUNNER CONTROLS -- Up -> sweeper up -- Down -> sweeper down **/
+        /** -- Left -> stop sweeper -- Right -> churro grabbers up down **/
+
+        if(gamepad2.dpad_up){
+
+            SweepPower = SweepGain * SweepPower;
+            Sweeper.setPower(SweepPower);
+
+        } else if (gamepad2.dpad_down){
+
+            SweepPower = SweepGain * SweepPower;
+            Sweeper.setPower(-SweepPower);
+
+        } else if (gamepad2.dpad_left) {
+
+            SweepPower = 0;
+            Sweeper.setPower(SweepPower);
+
+        } else {
+
+            Sweeper.setPower(SweepPower);
+
+        }
+/** there's is probably an easier way of doing this...fix later...**/
+
+        if(gamepad2.dpad_right){
+
+            i++;
+
+        }
+
+        if((i%2)==0) {
+
+            // even
+
+            ChurroGrabberRight.setPosition(churroGrabbersDown);
+            ChurroGrabberLeft.setPosition(churroGrabbersUp);
+
+        } else {
+
+            //odd
+
+            ChurroGrabberRight.setPosition(churroGrabbersUp);
+            ChurroGrabberLeft.setPosition(churroGrabbersDown);
+
+        }
+
+/** ************************************************************** **/
+
+/**        //Ball Tilt Functionality using D-Pad GameController 2 (gunner)
+        if (gamepad2.dpad_right) {
+            // if right dpad is pushed on gamepad2, turn the Tilt to the right
+            ballTiltPower = 0.5 - (0.5 * ballTiltGain);
+            BallTilt.setPosition(ballTiltPower);
+
+        }else if (gamepad2.dpad_left){
+            // if left dpad is pushed on gamepad2, turn the Tilt to the left
+            ballTiltPower = 0.5 + (0.5 * ballTiltGain);
+            BallTilt.setPosition(ballTiltPower);
+
+        } else {
+            //if dpad is not being used, don't tilt
+            BallTilt.setPosition(0.5);
+
+        } **/
+
+//////////////////////////////////////////////////////////////////////
+        
+        /** CLIMBER flickers using gamepad2 (gunner) triggers and bumpers **/
+
+        if (gamepad2.right_bumper) {
+
+            ClimberFlicker.setPosition(climberPositionUp);
+
+        } else if (gamepad1.right_trigger > 0.5) {
+
+            ClimberFlicker.setPosition(climberPositionDown);
+
+        } else {
+
+            // RightFlicker.setPosition(rightFlickerPosition);
+
+        }
+
+        /** String Flicker **/
+        
+        if (gamepad2.left_bumper) {
+
+            FlickString.setPosition(stringFlickerUp);
+
+        } else if (gamepad2.left_trigger > 0.5) {
+
+            FlickString.setPosition(stringFlickerDown);
+
+        } else {
+
+            // LeftFlicker.setPosition(leftFlickerPosition);
+
+        }
+
+        /**Arm Functionality using joysticks gamepad2 (gunner) **/
+
+        //avoid dead zone of +/- 10 percent of joystick range
+
+        if (Math.abs(gamepad2.left_stick_y) > 0.1) {
+
+            ArmPower = gamepad2.left_stick_y * ArmGain;
+
+        } else {
+
+            ArmPower = 0;
+        }
+
+        RightArm.setPower(ArmPower);
+        LeftArm.setPower(ArmPower);
+
+        /** Winch Functionality using joysticks gamepad2 (gunner) **/
+
+        //avoid dead zone of +/- 10 percent of joystick range
+        if (Math.abs(gamepad2.right_stick_y) > 0.1) {
+
+            WinchPower = gamepad2.right_stick_y * WinchGain;
+
+        } else {
+
+            WinchPower = 0;
+        }
+
+        Winch.setPower(WinchPower);
+
+        /** Flickers!!! ie dancing arms! **/
+        
+        // block/ball flipper functionality using gamepad 1 (driver)
+        if (gamepad1.right_bumper) {
+
+            rightFlickerPosition -= flickerGain;
+
+        } else if (gamepad1.right_trigger > 0.5) {
+
+            rightFlickerPosition += flickerGain;
+
+        } else {
+
+            // RightFlicker.setPosition(rightFlickerPosition);
+
+        }
+
+        if (gamepad1.left_bumper) {
+
+            leftFlickerPosition += flickerGain;
+
+        } else if (gamepad1.left_trigger > 0.5) {
+
+            leftFlickerPosition -= flickerGain;
+
+        } else {
+
+            // LeftFlicker.setPosition(leftFlickerPosition);
+
+        }
+
+        
+
+
+        //Clip the positions as to not exceed the required angles
+        rightFlickerPosition = Range.clip(rightFlickerPosition, RIGHT_FLICKER_MIN_RANGE, RIGHT_FLICKER_MAX_RANGE);
+        leftFlickerPosition = Range.clip(blockDropperPositionDown, LEFT_FLICKER_MIN_RANGE, LEFT_FLICKER_MAX_RANGE);
+        blockDropperPositionDown = Range.clip(blockDropperPositionDown, BLOCK_DROPPER_MIN_RANGE, BLOCK_DROPPER_MAX_RANGE);
+        blockDropperPositionUp = Range.clip(blockDropperPositionUp, BLOCK_DROPPER_MIN_RANGE, BLOCK_DROPPER_MAX_RANGE);
+
+
+        LeftFlicker.setPosition(leftFlickerPosition);
+        RightFlicker.setPosition(rightFlickerPosition);
+
+    }
+
+}
