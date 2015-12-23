@@ -41,7 +41,7 @@ public class DriverControl extends OpMode {
     double LeftTreadMotor2Power = 1;
     double TreadGain = 1;
 
-    final static double SECOND_MOTOR_DIFFERENTIAL_PERCENT = 1;
+    final static double SECOND_MOTOR_DIFFERENTIAL_PERCENT = 0.95;
 
     double ArmPower;
     double ArmGain = 1;
