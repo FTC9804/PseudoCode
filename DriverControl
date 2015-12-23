@@ -8,6 +8,13 @@ import com.qualcomm.robotcore.util.Range;
 /**
  * Created by etiennelunetta on 12/22/15.
  */
+ 
+ /** A FEW NOTES: 
+ -Clipping the servo values is most likely useless since we are just assigning positions. 
+ -Remove clippings for everything except for the front tire flippers please when someone gets the chance 
+ -This code is UNTESTED! When someone gets the chance, TEST IT!!
+ **/
+
 public class DriverControl extends OpMode {
 
     //Object declarations
