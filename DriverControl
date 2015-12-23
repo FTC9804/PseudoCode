@@ -386,7 +386,10 @@ public class DriverControl extends OpMode {
         blockDropperPositionDown = Range.clip(blockDropperPositionDown, BLOCK_DROPPER_MIN_RANGE, BLOCK_DROPPER_MAX_RANGE);
         blockDropperPositionUp = Range.clip(blockDropperPositionUp, BLOCK_DROPPER_MIN_RANGE, BLOCK_DROPPER_MAX_RANGE);
 
-
+        // AGAIN !! Clipping the servo values is most likely useless since we are just assigning positions. 
+        // REMEMBER to remove clippings for everything except for the front tire flippers please when someone gets the chance
+        //CLIPPING IS MOST LIKELY WRONG!!
+        
         LeftFlicker.setPosition(leftFlickerPosition);
         RightFlicker.setPosition(rightFlickerPosition);
 
